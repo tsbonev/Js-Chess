@@ -12,7 +12,6 @@ class Board {
         this.selectedFigure = null
 
         this.turn = 0
-        this.previousMoves = new Array()
         this.historyKeeper = new HistoryKeeper()
 
         this.previewingHistory = false
@@ -47,6 +46,15 @@ class Board {
 
     handleMove(figure, newRank, newFile) {
 
+        if(figure.type == figureTypes.PAWN && this.previewingHistory == false) {
+            if(figure.color == colors.BLACK && newRank == 7){
+                newFigure = figure.king().copy()
+            }
+            if(figure.color == colors.WHITE && newRank == 0){
+                figure = figure.king().copy()
+            }
+        }
+
         let oldFigure = figure.copy()
 
         this.figures[figure.rank][figure.file] = null
@@ -64,7 +72,6 @@ class Board {
         if(this.previewingHistory == false) {
             let historyLog = new HistoryLog(oldFigure, newFigure)
             this.historyKeeper.appendToHistory(historyLog)
-            this.previousMoves.push(historyLog.copy())
             appendToHistory(this.turn + 1)
         }
 
@@ -95,8 +102,11 @@ class Board {
 
         //Clicking stops history preview
         if(this.previewingHistory) {
-            this.previewingHistory = false
-            this.historyKeeper.rebuildHistoryAtVersion(this.turn)
+            let confirmed = confirm("This action will rebuild the history at the selected point.")
+            if(confirmed){
+                this.previewingHistory = false
+                this.historyKeeper.rebuildHistoryAtVersion(this.turn)
+            } else return
         }
 
 

@@ -89,7 +89,6 @@ class Figure {
 
         this.takeMoves.forEach(direction => {
             var figure = this.findFirstInDirection(board, direction)
-            console.log(figure)
 
             if(figure != null && figure.color != this.color) {
                 var lineMoves = this.fillLineToTarget(figure.rank, figure.file, this.rank, this.file,
@@ -191,7 +190,29 @@ class Pawn extends Figure {
     }
 
     king() {
+        var choice
+        while(choice != "queen" && choice != "bishop" && choice != "rook" && choice != "knight"){
+            choice = prompt("Choose what figure you want your pawn to become: a queen, a bishop, a rook or a knight?");
+        }
 
+        var kingedPawn
+
+        switch(choice) {
+            case "queen":
+                kingedPawn = new Queen(this.rank, this.file, this.color)
+                break
+            case "bishop":
+                kingedPawn = new Bishop(this.rank, this.file, this.color)
+                break
+            case "knight":
+                kingedPawn = new Knight(this.rank, this.file, this.color)
+                break
+            case "rook":
+                kingedPawn = new Rook(this.rank, this.file, this.color)
+                break
+        }
+
+        return kingedPawn
     }
 
     availableMoves(board) {
