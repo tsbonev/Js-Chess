@@ -3,7 +3,8 @@ function copyObjectArray(figures) {
     let clonedFigures = new Array()
 
     figures.forEach(elem => {
-        clonedFigures.push(elem.copy())
+        if(elem == null) clonedFigures.push(null)
+        else clonedFigures.push(elem.copy())
     })
 
     return clonedFigures

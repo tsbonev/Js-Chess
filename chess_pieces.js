@@ -26,6 +26,16 @@ class Figure {
         else return null
     }
 
+    checkSingleMoveOpponent(board, direction) {
+        var newRank = this.rank + direction.rankChange
+        var newFile = this.file + direction.fileChange
+        if(this.doBorderChecks(direction, newRank, newFile)) {
+            var figure = board.figures[newRank][newFile]
+            if(figure != null && figure.color != this.color) return figure
+        }
+        else return null
+    }
+
     findFirstInDirection(board, direction) {
         var figure
 
@@ -45,7 +55,7 @@ class Figure {
     }
 
     fillLineToTarget(targetRank, targetFile, rank, file, direction) {
-        var moves = Array()
+        var moves = new Array()
 
         var currentRank = rank
         var currentFile = file
@@ -85,7 +95,7 @@ class Figure {
     }
 
     availableMoves(board) {
-        var moves = Array()
+        var moves = new Array()
 
         this.takeMoves.forEach(direction => {
             var figure = this.findFirstInDirection(board, direction)
@@ -141,7 +151,7 @@ class Pawn extends Figure {
         this.canMoveTwice = true
         this.vulnerableToEnPassant = false
 
-        var freeMovementDirections = Array()
+        var freeMovementDirections = new Array()
 
         switch(this.color) {
             case colors.BLACK:
@@ -152,7 +162,7 @@ class Pawn extends Figure {
             freeMovementDirections.push(directions.UP)
         }
 
-        var takeDirections = Array()
+        var takeDirections = new Array()
 
         switch(this.color) {
             case colors.BLACK:
@@ -237,7 +247,7 @@ class Pawn extends Figure {
     }
 
     availableMoves(board) {
-        let moves = Array();
+        let moves = new Array();
 
         this.freeMovementDirections.forEach(direction => {
             var move = this.checkSingleMove(board, direction)
@@ -308,7 +318,7 @@ class Rook extends Figure {
     constructor(rank, file, color) {
         super(rank, file, color, figureTypes.ROOK)
 
-        var takeMoves = Array(
+        var takeMoves = new Array(
             directions.UP,
             directions.LEFT,
             directions.DOWN,
@@ -331,7 +341,7 @@ class Knight extends Figure {
     constructor(rank, file, color) {
         super(rank, file, color, figureTypes.KNIGHT)
 
-        var takeMoves = Array(
+        var takeMoves = new Array(
             directions.KN_DOWN_LEFT_HIGH,
             directions.KN_DOWN_LEFT_LOW,
             directions.KN_DOWN_RIGHT_HIGH,
@@ -363,7 +373,7 @@ class Knight extends Figure {
     
     availableMoves(board) {
 
-        var moves = Array()
+        var moves = new Array()
         
         this.takeMoves.forEach(direction => {
             var move = this.findJumpForKnight(board, direction)
@@ -383,7 +393,7 @@ class Bishop extends Figure {
     constructor(rank, file, color) {
         super(rank, file, color, figureTypes.BISHOP)
 
-        var takeMoves = Array(
+        var takeMoves = new Array(
             directions.DD_LEFT,
             directions.DD_RIGHT,
             directions.UD_LEFT,
@@ -406,7 +416,7 @@ class Queen extends Figure {
     constructor(rank, file, color) {
         super(rank, file, color, figureTypes.QUEEN)
 
-        var takeMoves = Array(
+        var takeMoves = new Array(
             directions.UP,
             directions.LEFT,
             directions.DOWN,
@@ -429,7 +439,7 @@ class King extends Figure{
     constructor(rank, file, color) {
         super(rank, file, color, figureTypes.KING)
 
-        var takeMoves = Array(
+        var takeMoves = new Array(
             directions.UP,
             directions.LEFT,
             directions.DOWN,
@@ -440,18 +450,113 @@ class King extends Figure{
             directions.UD_RIGHT
         )
 
+        var pawnCheckDirections = new Array()
+
+        switch(this.color) {
+            case colors.BLACK: 
+                pawnCheckDirections.push(directions.DD_LEFT)
+                pawnCheckDirections.push(directions.DD_RIGHT)
+                break
+            case colors.WHITE:
+                pawnCheckDirections.push(directions.UD_LEFT)
+                pawnCheckDirections.push(directions.UD_RIGHT)
+                break
+        }
+
+        var knightCheckDirections = new Array(
+            directions.KN_DOWN_LEFT_HIGH,
+            directions.KN_DOWN_LEFT_LOW,
+            directions.KN_DOWN_RIGHT_HIGH,
+            directions.KN_DOWN_RIGHT_LOW,
+            directions.KN_UP_LEFT_HIGH,
+            directions.KN_UP_LEFT_LOW,
+            directions.KN_UP_RIGHT_HIGH,
+            directions.KN_UP_RIGHT_LOW
+        )
+
+        var bishopCheckDirections = new Array(
+            directions.DD_LEFT,
+            directions.DD_RIGHT,
+            directions.UD_LEFT,
+            directions.UD_RIGHT
+        )
+
+        var rookCheckDirections = new Array(
+            directions.UP,
+            directions.LEFT,
+            directions.DOWN,
+            directions.RIGHT,
+        )
+
         this.takeMoves = takeMoves
+        this.pawnCheckDirections = pawnCheckDirections
+        this.knightCheckDirections = knightCheckDirections
+        this.bishopCheckDirections = bishopCheckDirections
+        this.rookCheckDirections = rookCheckDirections
+
+        this.isChecked = false
+    }
+
+    newPositionIsSafe(board, rank, file) {
+        var clone = this.copy()
+
+        clone.makeMove(rank, file)
+        var opponents = clone.isInCheck(board)
+
+        if(opponents.length == 0) return true
+
+        return false
     }
 
     isInCheck(board){
+        var isInCheck = false
+        var opponentsThreatening = new Array()
+        //Checks for pawns
 
-    }
+        this.pawnCheckDirections.forEach(direction => {
+            var opponent = this.checkSingleMoveOpponent(board, direction)
+            if(opponent != null && opponent.type == figureTypes.PAWN) {
+                isInCheck = true
+                opponentsThreatening.push(opponent)
+            }
+        })
 
-    isInMate(board){
+        //Knight checks
+        this.knightCheckDirections.forEach(direction => {
+            var opponent = this.checkSingleMoveOpponent(board, direction)
+            if(opponent != null && opponent.type == figureTypes.KNIGHT) {
+                isInCheck = true
+                opponentsThreatening.push(opponent)
+            }
+        })
 
+        //Bishop/Queen checks
+        this.bishopCheckDirections.forEach(direction => {
+            var opponent = this.findFirstInDirection(board, direction)
+            if(opponent != null && opponent.color != this.color && (opponent.type == figureTypes.QUEEN || opponent.type == figureTypes.BISHOP)) {
+                isInCheck = true
+                opponentsThreatening.push(opponent)
+            }
+        })
+
+        //Rook/Queen checks
+        this.rookCheckDirections.forEach(direction => {
+            var opponent = this.findFirstInDirection(board, direction)
+            if(opponent != null && opponent.color != this.color && (opponent.type == figureTypes.QUEEN || opponent.type == figureTypes.ROOK)) {
+                isInCheck = true
+                opponentsThreatening.push(opponent)
+            }
+        })
+
+
+        this.isChecked = isInCheck
+
+        return opponentsThreatening
     }
 
     availableMoves(board) {
+        this.isInCheck(board)
+
         var moves = Array()
         this.takeMoves.forEach(direction => {
             var move = this.checkSingleMove(board, direction)
@@ -459,7 +564,14 @@ class King extends Figure{
             if(move != null) moves.push(move)
         })
 
-        return moves
+        var safeMoves = new Array()
+
+        moves.forEach(move => {
+            var newPositionIsSafe = this.newPositionIsSafe(board, move[0], move[1])
+            if(newPositionIsSafe) safeMoves.push(move)
+        })
+
+        return safeMoves
     }
 
     makeMove(rank, file) {

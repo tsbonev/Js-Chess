@@ -17,6 +17,35 @@ class Board {
         this.previewingHistory = false
     }
 
+    copy() {
+        var figures = new Array()
+
+        for(var i = 0; i < 8; i ++) {
+            figures.push(new Array())
+        }
+
+        this.figures.forEach(row => {
+            row.forEach(figure => {
+                if(figure != null)
+                figures[figure.rank][figure.file] = figure.copy()
+            })
+        })
+
+        var newBoard = new Board(Array())
+        newBoard.figures = figures
+
+        return newBoard
+    }
+
+    getKing(color) {
+        var king
+        this.figures.forEach(row => {
+            var foundKing = row.find(element => element != null && element.type == figureTypes.KING && element.color == color)
+            if(foundKing != null) king = foundKing
+        })
+        return king
+    }
+
     arrangeFigures(figureList) {
         let figures = new Array()
         for(var i = 0; i < 8; i++){
@@ -66,7 +95,28 @@ class Board {
         }
     }
 
+    checkMoveSafety(figure, newRank, newFile) {
+        var newFigure = figure.copy()
+        newFigure.rank = newRank
+        newFigure.file = newFile
+
+        var simulatedBoard = this.copy()
+
+        simulatedBoard.figures[figure.rank][figure.file] = null
+        simulatedBoard.figures[newRank][newFile] = newFigure
+
+        var king = simulatedBoard.getKing(figure.color).copy()
+        var kingOpponents = king.isInCheck(simulatedBoard)
+        var isSafe = kingOpponents.length == 0
+
+        return isSafe
+    }
+
     handleMove(figure, newRank, newFile) {
+
+        var safeMove = this.checkMoveSafety(figure, newRank, newFile)
+        if(!safeMove) return false
+
         this.clearEnpassantVulnerabilities()
 
 
@@ -112,6 +162,8 @@ class Board {
         }
 
         this.turn += 1
+
+        return true
     }
 
     handleHistory(version) {
@@ -151,10 +203,15 @@ class Board {
 
         //Making valid move
         if(this.inSelection && moveInSelectable) {
-            this.handleMove(this.selectedFigure, rank, file)
+            var safeMove = this.handleMove(this.selectedFigure, rank, file)
 
-            drawChessBoard(this)
-            return
+            if(safeMove){
+                drawChessBoard(this)
+                return
+            }
+            else {
+                alert("Illegal move, leaves king in check!")
+            }
         }
 
         let selectedFigure = this.figures[rank][file]
@@ -202,6 +259,11 @@ class HistoryKeeper {
         }
 
         this.history = newHistory
+    }
+
+    copy() {
+        let clone = Object.assign( Object.create( Object.getPrototypeOf(this)), this)
+        return clone
     }
 }
 
