@@ -165,7 +165,9 @@ class Pawn extends Figure {
 
         this.freeMovementDirections = freeMovementDirections
         this.takeDirections = takeDirections 
-    
+
+        this.enPassantToLeft = false
+        this.enPassantToRight = false
     }
 
     findForPawnJump(board) {
@@ -215,13 +217,32 @@ class Pawn extends Figure {
         return kingedPawn
     }
 
+    
+    enPassantCheck(board, opponentDirection, takeDirection) {
+        //Returns move if empty or opponent inside of board
+        var oposingFigureOrBlank = this.checkSingleMove(board, opponentDirection)
+
+        if(oposingFigureOrBlank != null) {
+            var opponentRank = this.rank + opponentDirection.rankChange
+            var opponentFile = this.file + opponentDirection.fileChange
+            var figure = board.figures[opponentRank][opponentFile]
+
+            //Opens move behind pawn that is vulnerable to enpassant
+            if(figure != null && figure.type == figureTypes.PAWN && figure.vulnerableToEnPassant) {
+                return [this.rank + takeDirection.rankChange, this.file + takeDirection.fileChange]
+            }
+        }
+
+        return null
+    }
+
     availableMoves(board) {
         let moves = Array();
 
         this.freeMovementDirections.forEach(direction => {
             var move = this.checkSingleMove(board, direction)
 
-            if(move != null) moves.push(move)
+            if(move != null && board.figures[move[0]][move[1]] == null) moves.push(move)
         })
         
         this.takeDirections.forEach(direction => {
@@ -234,7 +255,34 @@ class Pawn extends Figure {
 
 
         var enPassantRight
-        var enPassantLeft   
+        var enPassantLeft 
+
+        switch(this.color) {
+            case colors.BLACK:
+                enPassantRight = this.enPassantCheck(board, directions.RIGHT, directions.DD_RIGHT)
+                enPassantLeft = this.enPassantCheck(board, directions.LEFT, directions.DD_LEFT)
+                break
+            case colors.WHITE:
+                enPassantRight = this.enPassantCheck(board, directions.RIGHT, directions.UD_RIGHT)
+                enPassantLeft = this.enPassantCheck(board, directions.LEFT, directions.UD_LEFT)
+                break
+        }
+        
+        if(enPassantRight != null) {
+            this.enPassantRight = true
+            moves.push(enPassantToRight)
+        }else{
+            enPassantRight = false
+        }
+
+        if(enPassantLeft != null) {
+            this.enPassantToLeft = true
+            moves.push(enPassantLeft)
+        } else {
+            enPassantLeft = false
+        }
+
+
         var figurePawnJump = this.findForPawnJump(board)
 
         if(figurePawnJump != null && this.canMoveTwice == true) {

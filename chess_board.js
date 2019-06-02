@@ -44,7 +44,31 @@ class Board {
         this.turn = 0
     }
 
+    clearEnpassantVulnerabilities() {
+        //White's turn
+        if(this.turn % 2 != 0) {
+            this.figures.forEach(row => {
+                row.forEach(element => {
+
+                if(element != null && element.type == figureTypes.PAWN && element.color == colors.WHITE){
+                    element.vulnerableToEnPassant = false
+                }
+            })
+        })
+        } else {
+            this.figures.forEach(row => {
+                row.forEach(element => {
+                    if(element != null && element.type == figureTypes.PAWN && element.color == colors.BLACK){
+                        element.vulnerableToEnPassant = false
+                    }
+                })
+            })
+        }
+    }
+
     handleMove(figure, newRank, newFile) {
+        this.clearEnpassantVulnerabilities()
+
 
         if(figure.type == figureTypes.PAWN && this.previewingHistory == false) {
             if(figure.color == colors.BLACK && newRank == 7){
@@ -62,6 +86,18 @@ class Board {
         let newFigure = figure.copy()
 
         this.figures[newRank][newFile] = newFigure
+
+        if(oldFigure.type == figureTypes.PAWN) {
+            //Can take diagonally left and has
+            if(oldFigure.enPassantToLeft && oldFigure.file > newFile) {
+                this.figures[newFigure.rank][newFigure.file - 1] = null
+            }
+
+            //Can take diagonally right and has
+            if(oldFigure.enPassantToRight && oldFigure.file < newFile) {
+                this.figures[newFigure.rank][newFigure.file + 1] = null
+            }
+        }
 
         newFigure.makeMove(newRank, newFile)
 
