@@ -55,10 +55,10 @@ function eraseSelectableMoves() {
     availableMoves.forEach(element => { element.classList.remove('cell-possible') })
 }
 
-function drawChessBoard(figureHolder) {
+function drawChessBoard(board) {
     eraseBoard()
 
-    updateTurn(figureHolder.turn)
+    updateTurn(board.turn)
 
     for (var y = 0; y < ranks.length; y++) {
         for (var x = 0; x < files.length; x++) {
@@ -78,7 +78,7 @@ function drawChessBoard(figureHolder) {
                     }
                 }
     
-            let figure = figureHolder.figures[y][x]
+            let figure = board.figures[y][x]
             if(figure != null){
                 let docIcon = document.createElement('i');
                 docIcon.className = figure.color + "-" + figure.type

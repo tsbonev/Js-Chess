@@ -1,10 +1,10 @@
 class Board {
     constructor(figureList) {
-        this.initialFigures = copyFiguresInSingleArray(figureList)
+        this.initialFigures = copyObjectArray(figureList)
 
         let figures = this.arrangeFigures(this.initialFigures)
 
-        this.figures = figures.map(arr => arr.slice())
+        this.figures = figures
 
         this.selectableMoves = Array()
         
@@ -22,19 +22,17 @@ class Board {
         }
 
         figureList.forEach(element => {
-            let clone = Object.assign( Object.create( Object.getPrototypeOf(element)), element)
-            figures[clone.rank][clone.file] =  clone
+            let figureClone = element.copy()
+            figures[figureClone.rank][figureClone.file] =  figureClone
         })
 
         return figures
     }
 
     resetState() {
-        let figureList = copyFiguresInSingleArray(this.initialFigures)
+        let figureList = copyObjectArray(this.initialFigures)
 
         this.figures = this.arrangeFigures(figureList)
-
-        console.log(this.figures)
 
         this.selectableMoves = Array()
         
@@ -48,15 +46,15 @@ class Board {
 
     handleMove(figure, newRank, newFile) {
         
+        let oldFigure = figure.copy()
+
         this.figures[figure.rank][figure.file] = null
 
-        let oldFigure = new Figure(figure.rank, figure.file, figure.color, figure.type)
+        let newFigure = figure.copy()
 
-        this.figures[newRank][newFile] = this.selectedFigure
+        this.figures[newRank][newFile] = newFigure
 
-        figure.makeMove(newRank, newFile)
-
-        let newFigure = new Figure(figure.rank, figure.file, figure.color, figure.type)
+        newFigure.makeMove(newRank, newFile)
 
         this.inSelection = false
         this.selectedFigure = null
@@ -73,7 +71,7 @@ class Board {
         this.resetState()
 
         if(version != 0) {
-            let historyLogs = this.previousMoves.slice()
+            let historyLogs = copyObjectArray(this.previousMoves)
             this.previousMoves = Array()
 
             for(var i = 0; i <= version - 1; i++){
@@ -81,7 +79,6 @@ class Board {
                 var figurePrevious = historyLog.oldFigure
                 var figuredMoved = historyLog.newFigure
                 this.handleMove(figurePrevious, figuredMoved.rank, figuredMoved.file)
-                console.log(this.figures)
             }
         }
 
@@ -126,3 +123,14 @@ class Board {
     }
 }
 
+class HistoryLog {
+    constructor(oldFigure, newFigure) {
+        this.oldFigure = oldFigure
+        this.newFigure = newFigure
+    }
+
+    copy() {
+        let clone = Object.assign( Object.create( Object.getPrototypeOf(this)), this)
+        return clone
+    }
+}

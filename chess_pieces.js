@@ -6,6 +6,11 @@ class Figure {
         this.type = type
     }
 
+    copy() {
+        let clone = Object.assign( Object.create( Object.getPrototypeOf(this)), this)
+        return clone
+    }
+
     checkSingleMove(board, direction) {
         var newRank = this.rank + direction.rankChange
         var newFile = this.file + direction.fileChange
@@ -390,12 +395,5 @@ class King extends Figure{
 
     makeMove(rank, file) {
         super.makeMove(rank, file)
-    }
-}
-
-class HistoryLog {
-    constructor(oldFigure, newFigure) {
-        this.oldFigure = oldFigure
-        this.newFigure = newFigure
     }
 }
