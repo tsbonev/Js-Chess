@@ -57,6 +57,8 @@ class Figure {
     fillLineToTarget(targetRank, targetFile, rank, file, direction) {
         var moves = new Array()
 
+        if(targetRank == rank && targetFile == file) return moves
+
         var currentRank = rank
         var currentFile = file
 
