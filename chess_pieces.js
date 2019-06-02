@@ -328,6 +328,8 @@ class Rook extends Figure {
         )
 
         this.takeMoves = takeMoves
+
+        this.canCastle = true
     }
 
     availableMoves(board) {
@@ -335,6 +337,7 @@ class Rook extends Figure {
     }
 
     makeMove(rank, file) {
+        this.canCastle = false
         super.makeMove(rank, file)
     }
 }
@@ -497,6 +500,8 @@ class King extends Figure{
         this.rookCheckDirections = rookCheckDirections
 
         this.isChecked = false
+
+        this.canCastle = true
     }
 
     newPositionIsSafe(board, rank, file) {
@@ -555,6 +560,64 @@ class King extends Figure{
 
         return opponentsThreatening
     }
+    
+    kingIsCheckedIfInPosition(board, rank, file) {
+        var newKing = new King(rank, file, this.color)
+
+        return newKing.isInCheck(board).length != 0
+    }
+
+    canCastleLeft(board) {
+        if(this.canCastle && this.isChecked == false) {
+            var rank = this.rank
+            var leftRook = board.figures[rank][0]
+
+            if(leftRook != null && leftRook.type == figureTypes.ROOK && leftRook.color == this.color && leftRook.canCastle)
+            {
+                var bishopSpot =  board.figures[rank][1]
+                var knightSpot  =  board.figures[rank][2]
+                var queenSpot = board.figures[rank][3]
+
+                if(bishopSpot != null || knightSpot != null || queenSpot != null) return null
+
+                var kingCheckedInQueenSpot = this.kingIsCheckedIfInPosition(board, rank, 3)
+                var kingCheckedInBishopSpot = this.kingIsCheckedIfInPosition(board, rank, 2)
+                var kingCheckedInKnightSpot = this.kingIsCheckedIfInPosition(board, rank, 1)
+
+                if(kingCheckedInQueenSpot || kingCheckedInBishopSpot ||  kingCheckedInKnightSpot) return null
+
+                return leftRook
+            }
+        } else return null
+    }
+
+    canCastleRight(board) {
+        console.log("Checking castle right")
+
+        if(this.canCastle && this.isChecked == false) {
+            console.log("Can castle and is not checked")
+            var rank = this.rank
+            var rightRook = board.figures[rank][7]
+
+            if(rightRook != null && rightRook.type == figureTypes.ROOK && rightRook.color == this.color && rightRook.canCastle)
+            {
+                console.log("Rook found and can castle")
+                var bishopSpot =  board.figures[rank][5]
+                var knightSpot  =  board.figures[rank][6]
+
+                if(bishopSpot != null || knightSpot != null) return null
+
+                console.log("Places free")
+                var kingCheckedInBishopSpot = this.kingIsCheckedIfInPosition(board, rank, 5)
+                var kingCheckedInKnightSpot = this.kingIsCheckedIfInPosition(board, rank, 6)
+
+                if(kingCheckedInBishopSpot ||  kingCheckedInKnightSpot) return null
+                console.log("Places not checked")
+
+                return rightRook
+            }
+        } else return null
+    }
 
     availableMoves(board) {
         this.isInCheck(board)
@@ -565,6 +628,12 @@ class King extends Figure{
 
             if(move != null) moves.push(move)
         })
+
+        var canCastleLeft = this.canCastleLeft(board)
+        var canCastleRight = this.canCastleRight(board)
+
+        if(canCastleLeft != null) moves.push([this.rank, 2])
+        if(canCastleRight != null) moves.push([this.rank, 6])
 
         var safeMoves = new Array()
 
@@ -577,6 +646,7 @@ class King extends Figure{
     }
 
     makeMove(rank, file) {
+        this.canCastle = false
         super.makeMove(rank, file)
     }
 }

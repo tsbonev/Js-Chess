@@ -119,10 +119,9 @@ class Board {
 
         this.clearEnpassantVulnerabilities()
 
-
         if(figure.type == figureTypes.PAWN && this.previewingHistory == false) {
             if(figure.color == colors.BLACK && newRank == 7){
-                newFigure = figure.king().copy()
+                figure = figure.king().copy()
             }
             if(figure.color == colors.WHITE && newRank == 0){
                 figure = figure.king().copy()
@@ -146,6 +145,35 @@ class Board {
             //Can take diagonally right and has
             if(oldFigure.enPassantToRight && oldFigure.file < newFile) {
                 this.figures[newFigure.rank][newFigure.file + 1] = null
+            }
+        }
+
+
+        //Castle
+        if(oldFigure.type == figureTypes.KING) {
+            //Left castle is 4 - 2 = 2
+            //Right castle is 4 - 6 = -2
+            var differenceInFile = oldFigure.file - newFile
+
+            //Left castle moves rook from 0 to 3
+            //Right castle moves rook from 7 to 5
+            if( Math.abs(differenceInFile) > 1) {
+                //Right castle
+                if(differenceInFile < 0) {
+                    var rightRook = this.figures[oldFigure.rank][7]
+                    var newRook = rightRook.copy()
+                    this.figures[oldFigure.rank][7] = null
+                    this.figures[oldFigure.rank][5] = newRook
+                    newRook.makeMove(oldFigure.rank, 5)
+
+                } else {
+                    //Left castle
+                    var leftRook = this.figures[oldFigure.rank][0]
+                    var newRook = leftRook.copy()
+                    this.figures[oldFigure.rank][0] = null
+                    this.figures[oldFigure.rank][3] = newRook
+                    newRook.makeMove(oldFigure.rank, 3)
+                }
             }
         }
 
