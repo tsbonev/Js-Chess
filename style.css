@@ -97,8 +97,12 @@ i {
     background-color: #ffad33;
 }
 
+.cell-possible.cell-black {
+    background-color: #fcbe2fad;
+}
+
 .cell-possible {
-    background-color: #ffce5b;
+    background-color: #ffce5b7c;
 }
  
 .black-pawn:before {
