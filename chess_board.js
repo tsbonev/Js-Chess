@@ -12,7 +12,10 @@ class Board {
         this.selectedFigure = null
 
         this.turn = 0
-        this.previousMoves = Array()
+        this.previousMoves = new Array()
+        this.historyKeeper = new HistoryKeeper()
+
+        this.previewingHistory = false
     }
 
     arrangeFigures(figureList) {
@@ -40,12 +43,10 @@ class Board {
         this.selectedFigure = null
 
         this.turn = 0
-
-        eraseHistory()
     }
 
     handleMove(figure, newRank, newFile) {
-        
+
         let oldFigure = figure.copy()
 
         this.figures[figure.rank][figure.file] = null
@@ -60,22 +61,24 @@ class Board {
         this.selectedFigure = null
         this.selectableMoves = Array();
 
-        this.previousMoves.push(new HistoryLog(oldFigure, newFigure))
-
-        appendToHistory(this.turn + 1)
+        if(this.previewingHistory == false) {
+            let historyLog = new HistoryLog(oldFigure, newFigure)
+            this.historyKeeper.appendToHistory(historyLog)
+            this.previousMoves.push(historyLog.copy())
+            appendToHistory(this.turn + 1)
+        }
 
         this.turn += 1
     }
 
     handleHistory(version) {
         this.resetState()
+        this.previewingHistory = true
 
         if(version != 0) {
-            let historyLogs = copyObjectArray(this.previousMoves)
-            this.previousMoves = Array()
 
             for(var i = 0; i <= version - 1; i++){
-                var historyLog = historyLogs[i]
+                let historyLog = this.historyKeeper.getLogVorVersion(i)
                 var figurePrevious = historyLog.oldFigure
                 var figuredMoved = historyLog.newFigure
                 this.handleMove(figurePrevious, figuredMoved.rank, figuredMoved.file)
@@ -89,6 +92,12 @@ class Board {
         //Clean selection
         eraseSelectableMoves()
         eraseSelectedFigure()
+
+        //Clicking stops history preview
+        if(this.previewingHistory) {
+            this.previewingHistory = false
+            this.historyKeeper.rebuildHistoryAtVersion(this.turn)
+        }
 
 
         let moveInSelectable = this.selectableMoves.find(element => 
@@ -120,6 +129,33 @@ class Board {
             
             drawSelectableMoves(selectableMoves)
         }
+    }
+}
+
+class HistoryKeeper {
+    constructor() {
+        this.history = new Array()
+    }
+
+    appendToHistory(historyLog) {
+        this.history.push(historyLog.copy())
+    }
+
+    getLogVorVersion(version) {
+        return this.history[version].copy()
+    }
+
+    rebuildHistoryAtVersion(version) {
+        eraseSelectedHistory()
+        eraseHistory()
+
+        let newHistory = new Array()
+        for(var i = 0; i < version; i++){
+            newHistory.push(this.history[i].copy())
+            appendToHistory(i + 1)
+        }
+
+        this.history = newHistory
     }
 }
 

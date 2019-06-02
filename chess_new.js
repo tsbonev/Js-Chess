@@ -202,12 +202,21 @@ historyLog.addEventListener('click', clickOnHistory)
 function clickOnHistory(e){
     var e = event.target;
     
+    eraseSelectedHistory()
+
+    e.classList.add('selected-history')
+
 	if(e.textContent == "Start"){
         board.handleHistory(0)  
 	}
     else{
     	board.handleHistory(parseInt(e.textContent.split(" ")[1]))
     }
+}
+
+function eraseSelectedHistory() {
+    let selectedHistory = [].slice.call(document.getElementsByClassName('selected-history'))
+    selectedHistory.forEach(element => { element.classList.remove('selected-history') })
 }
 
 
